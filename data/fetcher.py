@@ -3,9 +3,23 @@ import pandas as pd
 import numpy as np
 
 
-# Seed prices roughly matching 2022-2024 starting levels
-_SEED_PRICES = {'AAPL': 180.0, 'MSFT': 310.0, 'GOOGL': 140.0}
-_SEED_DRIFT  = {'AAPL': 0.0003, 'MSFT': 0.0004, 'GOOGL': 0.0002}
+# A股CPO板块种子价格（2023年初参考价）及漂移
+_SEED_PRICES = {
+    '300394.SZ': 35.0,   # 天孚通信
+    '300308.SZ': 60.0,   # 中际旭创
+    '300502.SZ': 28.0,   # 新易盛
+    '002281.SZ': 18.0,   # 光迅科技
+    '000988.SZ': 12.0,   # 华工科技
+    '300570.SZ': 22.0,   # 太辰光
+}
+_SEED_DRIFT = {
+    '300394.SZ': 0.0008,
+    '300308.SZ': 0.0010,
+    '300502.SZ': 0.0009,
+    '002281.SZ': 0.0004,
+    '000988.SZ': 0.0003,
+    '300570.SZ': 0.0006,
+}
 
 
 def _synthetic(ticker: str, start: str, end: str) -> pd.DataFrame:

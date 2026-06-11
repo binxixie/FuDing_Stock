@@ -4,9 +4,10 @@ import pandas as pd
 
 def sharpe_ratio(returns: pd.Series, risk_free: float = 0.02) -> float:
     excess = returns - risk_free / 252
-    if excess.std() == 0:
+    std = excess.std()
+    if len(excess) < 2 or not np.isfinite(std) or std < 1e-10:
         return 0.0
-    return float(np.sqrt(252) * excess.mean() / excess.std())
+    return float(np.sqrt(252) * excess.mean() / std)
 
 
 def max_drawdown(equity_curve: pd.Series) -> float:
