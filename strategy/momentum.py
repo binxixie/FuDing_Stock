@@ -1,25 +1,39 @@
 import pandas as pd
-import ta
+
+
+def _rsi(close, window=14):
+    delta = close.diff()
+    gain = delta.clip(lower=0).rolling(window).mean()
+    loss = (-delta.clip(upper=0)).rolling(window).mean()
+    rs = gain / loss
+    return 100 - 100 / (1 + rs)
+
+
+def _ema(close, span):
+    return close.ewm(span=span, adjust=False).mean()
+
+
+def _roc(close, window=10):
+    return (close - close.shift(window)) / close.shift(window) * 100
 
 
 def momentum_strategy(data: pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
 
-    df['rsi'] = ta.momentum.RSIIndicator(close=df['Close'], window=14).rsi()
+    df['rsi'] = _rsi(df['Close'])
 
-    macd = ta.trend.MACD(close=df['Close'], window_slow=26, window_fast=12, window_sign=9)
-    df['macd'] = macd.macd()
-    df['macd_signal'] = macd.macd_signal()
+    ema_fast = _ema(df['Close'], 12)
+    ema_slow = _ema(df['Close'], 26)
+    df['macd'] = ema_fast - ema_slow
+    df['macd_signal'] = _ema(df['macd'], 9)
 
-    df['roc'] = ta.momentum.ROCIndicator(close=df['Close'], window=10).roc()
+    df['roc'] = _roc(df['Close'])
 
-    df['macd_cross_up'] = (df['macd'] > df['macd_signal']) & (df['macd'].shift(1) <= df['macd_signal'].shift(1))
-    df['macd_cross_down'] = (df['macd'] < df['macd_signal']) & (df['macd'].shift(1) >= df['macd_signal'].shift(1))
+    macd_cross_up = (df['macd'] > df['macd_signal']) & (df['macd'].shift(1) <= df['macd_signal'].shift(1))
+    macd_cross_down = (df['macd'] < df['macd_signal']) & (df['macd'].shift(1) >= df['macd_signal'].shift(1))
 
     df['signal'] = 0
-    df.loc[(df['rsi'] < 40) & df['macd_cross_up'], 'signal'] = 1
-    df.loc[(df['rsi'] > 70) | df['macd_cross_down'], 'signal'] = -1
-
-    df.drop(columns=['macd_cross_up', 'macd_cross_down'], inplace=True)
+    df.loc[(df['rsi'] < 40) & macd_cross_up, 'signal'] = 1
+    df.loc[(df['rsi'] > 70) | macd_cross_down, 'signal'] = -1
 
     return df

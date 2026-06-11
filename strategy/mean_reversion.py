@@ -1,14 +1,13 @@
 import pandas as pd
-import ta
 
 
 def mean_reversion_strategy(data: pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
 
-    bb = ta.volatility.BollingerBands(close=df['Close'], window=20, window_dev=2)
-    df['bb_upper'] = bb.bollinger_hband()
-    df['bb_middle'] = bb.bollinger_mavg()
-    df['bb_lower'] = bb.bollinger_lband()
+    df['bb_middle'] = df['Close'].rolling(20).mean()
+    std = df['Close'].rolling(20).std()
+    df['bb_upper'] = df['bb_middle'] + 2 * std
+    df['bb_lower'] = df['bb_middle'] - 2 * std
 
     df['signal'] = 0
     df.loc[df['Close'] < df['bb_lower'], 'signal'] = 1
